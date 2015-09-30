@@ -86,8 +86,10 @@ find_program (MAKE_EXECUTABLE NAMES make gmake)
 if (PETSC_DIR AND NOT PETSC_ARCH)
   set (_petsc_arches
     $ENV{PETSC_ARCH}                   # If set, use environment variable first
+    real                               # Mac Homebrew
     linux-gnu-c-debug linux-gnu-c-opt  # Debian defaults
-    x86_64-unknown-linux-gnu i386-unknown-linux-gnu)
+    x86_64-unknown-linux-gnu i386-unknown-linux-gnu
+  )
   set (petscconf "NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
   foreach (arch ${_petsc_arches})
     if (NOT PETSC_ARCH)
@@ -122,8 +124,8 @@ elseif (EXISTS "${PETSC_DIR}/bmake/${PETSC_ARCH}/petscconf.h") # <= 2.3.3
   set (petsc_conf_rules "${PETSC_DIR}/bmake/common/rules")
   set (petsc_conf_variables "${PETSC_DIR}/bmake/common/variables")
 elseif (EXISTS "${PETSC_DIR}/opt/petsc/include/petscconf.h") # Mac OS X with Homebrew
-  set (petsc_conf_rules "${PETSC_DIR}/opt/petsc/${PETSC_ARCH}/conf/rules")
-  set (petsc_conf_variables "${PETSC_DIR}/opt/petsc/${PETSC_ARCH}/conf/variables")
+  set (petsc_conf_rules "${PETSC_DIR}/opt/petsc/${PETSC_ARCH}/lib/petsc/conf/rules")
+  set (petsc_conf_variables "${PETSC_DIR}/opt/petsc/${PETSC_ARCH}/lib/petsc/conf/variables")
 elseif (PETSC_DIR)
   message (SEND_ERROR "The pair PETSC_DIR=${PETSC_DIR} PETSC_ARCH=${PETSC_ARCH} do not specify a valid PETSc installation")
 endif ()
@@ -274,7 +276,13 @@ int main(int argc,char *argv[]) {
 
 
   find_path (PETSC_INCLUDE_DIR petscts.h HINTS "${PETSC_DIR}" PATH_SUFFIXES include NO_DEFAULT_PATH)
-  find_path (PETSC_INCLUDE_CONF petscconf.h HINTS "${PETSC_DIR}" PATH_SUFFIXES "${PETSC_ARCH}/include" "bmake/${PETSC_ARCH}" NO_DEFAULT_PATH)
+  find_path (PETSC_INCLUDE_CONF petscconf.h HINTS "${PETSC_DIR}"
+    PATH_SUFFIXES
+      ${PETSC_ARCH}/include
+      bmake/${PETSC_ARCH}
+      opt/petsc/${PETSC_ARCH}/include # Mac Homebrew
+    NO_DEFAULT_PATH
+  )
   mark_as_advanced (PETSC_INCLUDE_DIR PETSC_INCLUDE_CONF)
   set (petsc_includes_minimal ${PETSC_INCLUDE_CONF} ${PETSC_INCLUDE_DIR})
 
